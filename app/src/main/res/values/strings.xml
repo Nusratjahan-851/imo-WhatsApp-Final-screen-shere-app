@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Link Assistant</string>
+    <string name="screen_share_title">স্ক্রিন শেয়ারিং অ্যাসিস্ট্যান্ট</string>
+    <string name="screen_share_start">স্ক্রিন শেয়ারিং চালু করুন</string>
+    <string name="screen_share_stop">স্ক্রিন শেয়ারিং বন্ধ করুন</string>
+    <string name="screen_share_active">লাইভ স্ক্রিন শেয়ার সক্রিয় রয়েছে</string>
+    <string name="screen_share_guide">স্ক্রিন শেয়ারের নিয়মাবলী</string>
+</resources>

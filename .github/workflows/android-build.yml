@@ -1,0 +1,158 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    name: Build & Test Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Ensure Permanent Keystore is Present
+        run: |
+          if [ -f debug.keystore.base64 ]; then
+            echo "Restoring debug.keystore from debug.keystore.base64..."
+            base64 -d debug.keystore.base64 > debug.keystore
+          elif [ ! -f debug.keystore ]; then
+            echo "Restoring permanent consistent keystore from embedded base64..."
+            cat << 'EOF' | base64 -d > debug.keystore
+          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
+          EOF
+          fi
+          ls -la debug.keystore
+
+      - name: Ensure Google Services Config is Present
+        run: |
+          mkdir -p app
+          if [ ! -f app/google-services.json ]; then
+            echo "Generating base google-services.json..."
+            cat << 'EOF' > app/google-services.json
+          {
+            "project_info": {
+              "project_number": "906974342849",
+              "project_id": "whatsapp-channel-chat",
+              "storage_bucket": "whatsapp-channel-chat.firebasestorage.app"
+            },
+            "client": [],
+            "configuration_version": "1"
+          }
+          EOF
+          fi
+
+          echo "Ensuring google-services.json contains matching package name for build..."
+          python3 - << 'PYEOF'
+          import json, re
+
+          with open("app/build.gradle.kts", "r") as f:
+              content = f.read()
+
+          m = re.search(r'applicationId\s*=\s*"([^"]+)"', content)
+          app_id = m.group(1).strip() if m else "com.aistudio.applet.tlenci"
+
+          with open("app/google-services.json", "r") as f:
+              data = json.load(f)
+
+          clients = data.get("client", [])
+          existing_pkgs = {c.get("client_info", {}).get("android_client_info", {}).get("package_name") for c in clients}
+
+          for pkg in [app_id, "com.aistudio.applet.tlenci", "com.aistudio.applet.uwmaqu", "com.example"]:
+              if pkg and pkg not in existing_pkgs:
+                  clients.append({
+                      "client_info": {
+                          "mobilesdk_app_id": f"1:906974342849:android:{pkg.split('.')[-1]}",
+                          "android_client_info": {
+                              "package_name": pkg
+                          }
+                      },
+                      "oauth_client": [],
+                      "api_key": [{"current_key": "AIzaSyBqlFQzFAAQudAvmBH_KXuDzkLE4gHO7qo"}],
+                      "services": {}
+                  })
+                  existing_pkgs.add(pkg)
+
+          data["client"] = clients
+          with open("app/google-services.json", "w") as f:
+              json.dump(data, f, indent=2)
+
+          print(f"Verified google-services.json for clients: {list(existing_pkgs)}")
+          PYEOF
+          ls -la app/google-services.json
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Build Unified APK
+        run: |
+          ./gradlew assembleRelease --no-daemon --stacktrace
+          mkdir -p artifacts
+          if ls app/build/outputs/apk/release/*.apk 1> /dev/null 2>&1; then
+            cp app/build/outputs/apk/release/*.apk artifacts/Link-Assistant.apk
+          elif ls app/build/outputs/apk/debug/*.apk 1> /dev/null 2>&1; then
+            cp app/build/outputs/apk/debug/*.apk artifacts/Link-Assistant.apk
+          fi
+          ls -lh artifacts/Link-Assistant.apk
+
+      - name: Clean Up Old Workflow Artifacts
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Cleaning up previous workflow artifacts to free Actions storage quota..."
+          ARTIFACT_IDS=$(gh api "repos/${{ github.repository }}/actions/artifacts?per_page=100" --jq '.artifacts[].id' 2>/dev/null || true)
+          for id in $ARTIFACT_IDS; do
+            echo "Deleting old artifact ID: $id"
+            gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id" || true
+          done
+
+      - name: Publish Direct APK to GitHub Releases
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG_NAME="latest-build"
+          if ! gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release create "$TAG_NAME" artifacts/Link-Assistant.apk \
+              --target "${{ github.sha }}" \
+              --title "Latest APK Build" \
+              --notes "সরাসরি ডাউনলোডযোগ্য সর্বশেষ APK বিল্ড (TalkBack ও স্ক্রিন রিডার বান্ধব, আনজিপ করার প্রয়োজন নেই)।"
+          else
+            gh release upload "$TAG_NAME" artifacts/Link-Assistant.apk --clobber
+            gh release edit "$TAG_NAME" --target "${{ github.sha }}" --title "Latest APK Build"
+          fi
+
+      - name: Upload APK Artifact (1-Day Retention)
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: Link-Assistant-APK
+          path: artifacts/Link-Assistant.apk
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 9
+          overwrite: true

@@ -1,0 +1,14 @@
+services:
+  # Render.com Web Service configuration
+  - type: web
+    name: whatsapp-qr-share
+    env: node
+    plan: free
+    region: singapore
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /healthz
+    autoDeploy: true

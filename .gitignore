@@ -1,0 +1,28 @@
+# Gradle files
+.gradle/
+build/
+app/build/
+.build-outputs/
+.kotlin/
+
+# Local configuration
+*.local.properties
+.env
+
+# Android Studio and IntelliJ IDEA
+.idea/
+*.iml
+.aistudio/
+
+# Log files
+*.log
+*-debug.log
+
+# Never ignore gradle wrapper files and critical build configs
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
+!app/google-services.json
+!debug.keystore
+!debug.keystore.base64

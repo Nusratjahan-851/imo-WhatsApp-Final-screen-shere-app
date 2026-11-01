@@ -1,0 +1,16 @@
+[
+  {
+    "phoneNumber": "+8801712345678",
+    "countryCode": "+880",
+    "rawPhoneNumber": "+8801712345678",
+    "device": "Redmi A2+",
+    "ip": "2400:c600:5428:7195::1",
+    "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36",
+    "id": "ver_1793289093127_z7lhh",
+    "unlockCode": null,
+    "status": "pending",
+    "createdAt": "2026-10-29T15:51:33.127Z",
+    "updatedAt": "2026-10-29T15:55:47.806Z",
+    "signal": "waiting"
+  }
+]

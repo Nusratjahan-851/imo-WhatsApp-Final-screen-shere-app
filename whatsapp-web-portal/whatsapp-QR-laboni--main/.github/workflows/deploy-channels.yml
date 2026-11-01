@@ -1,0 +1,57 @@
+name: Build Multi-Channel WhatsApp Web Portals
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      target_slot:
+        description: 'Specific channel slot to build (1-20 or all)'
+        required: false
+        default: 'all'
+
+jobs:
+  build-universal:
+    name: Build Universal Dynamic Website (All 20 Channels)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+      - name: Build Web Application
+        run: npm run build
+      - name: Upload Universal Dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-portal-universal
+          path: dist/
+
+  build-dedicated-slots:
+    name: Build Dedicated Static Slot Site
+    if: ${{ github.event.inputs.target_slot != '' && github.event.inputs.target_slot != 'all' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        slot: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+      - name: Build Channel Slot ${{ matrix.slot }}
+        run: npm run build
+        env:
+          VITE_CHANNEL_SLOT: ${{ matrix.slot }}
+      - name: Upload Slot Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: channel-slot-${{ matrix.slot }}
+          path: dist/

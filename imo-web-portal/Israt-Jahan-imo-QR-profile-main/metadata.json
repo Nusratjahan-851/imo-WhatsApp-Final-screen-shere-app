@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix Remix Remix imo QR Code \u0026 Scanner",
+  "description": "An authentic imo-style QR code profile, temporary QR generator, and interactive scanner application.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

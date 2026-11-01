@@ -1,11 +1,39 @@
-<div align="center">
+# WhatsApp Beta - Accessible Device Linking Assistant
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+দৃষ্টি প্রতিবন্ধী ভাই ও বোনদের জন্য সহজ ও স্বয়ংক্রিয় হোয়াটসঅ্যাপ পেয়ারিং কোড অটো-ফিল এবং ডিভাইস লিঙ্কিং অ্যাসিস্ট্যান্ট।
 
-  <h1>Built with AI Studio</h2>
+---
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🚀 GitHub Actions দিয়ে অটোমেটিক APK বিল্ড করার নিয়ম
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+এই রিপোজিটরিতে **GitHub Actions CI/CD Workflow** যুক্ত করা হয়েছে (`.github/workflows/android-build.yml`)।
 
-</div>
+### ১. কীভাবে গিটহাবে পুশ করবেন:
+AI Studio সেটিংস মেনু থেকে সরাসরি **"Export to GitHub"** এ ক্লিক করে আপনার GitHub অ্যাকাউন্টে পুশ করতে পারেন অথবা টার্মিনালে:
+```bash
+git init
+git add .
+git commit -m "Initial commit with GitHub Action workflow"
+git branch -M main
+git remote add origin https://github.com/আপনার-ইউজারনেম/আপনার-রিপো-নাম.git
+git push -u origin main
+```
+
+### ২. GitHub Actions স্বয়ংক্রিয়ভাবে কীভাবে কাজ করবে:
+1. কোড পুশ করার সাথে সাথে GitHub Actions স্বয়ংক্রিয়ভাবে ট্রিগার হবে।
+2. **JDK 21** ও **Gradle Wrapper** কনফিগার করে সম্পূর্ণ টেস্ট রান করবে।
+3. সফলভাবে **Debug APK** বিল্ড করবে।
+4. বিল্ড হওয়া APK ফাইলটি `WhatsApp-Beta-Debug-APK` নামে আর্টফ্যাক্টস (Artifacts) সেকশনে আপলোড করে দেবে।
+
+### ৩. কীভাবে APK ডাউনলোড করবেন:
+1. আপনার GitHub রিপোজিটরির **Actions** ট্যাবে যান।
+2. সর্বশেষ সম্পন্ন হওয়া ওয়ার্কফ্লোর ওপর ক্লিক করুন।
+3. পেজের নিচের দিকে **Artifacts** সেকশনে `WhatsApp-Beta-Debug-APK` নামের জিপ ফাইলটিতে ক্লিক করলেই APK ডাউনলোড হয়ে যাবে।
+4. যেকোনো সময় ম্যানুয়ালি বিল্ড করতে চাইলে Actions ট্যাবে গিয়ে **"Run workflow"** বাটনে ক্লিক করলেই নতুন বিল্ড তৈরি হবে।
+
+---
+
+## ✨ মূল সুবিধাসমূহ
+- **সম্পূর্ণ ভয়েস গাইডেন্স (TTS):** দৃষ্টি প্রতিবন্ধী ভাই ও বোনদের জন্য প্রতিটি পদক্ষেপে পরিষ্কার বাংলা ভয়েস বার্তা।
+- **স্বয়ংক্রিয় পেয়ারিং কোড অটো-ফিল:** `01337019612` নাম্বার থেকে হোয়াটসঅ্যাপ নোটিফিকেশন আসার সাথে সাথে ৮ অক্ষরের কোড সনাক্ত, কপি ও হোয়াটসঅ্যাপে পেস্ট।
+- **এক ক্লিকে লিঙ্ক স্ক্রিন:** "Get started" বাটন চাপলেই লিঙ্ক ডিভাইস পেজ ওপেন।

@@ -1,0 +1,113 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A registered user in the accessible WhatsApp database.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "displayName": { "type": "string" },
+        "status": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "isOnline": { "type": "boolean" },
+        "lastSeen": { "type": "integer" },
+        "createdAt": { "type": "integer" }
+      },
+      "required": ["uid", "phoneNumber", "displayName"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "A 1-on-1 private chat room between two users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "participantNames": { "type": "object" },
+        "participantPhones": { "type": "object" },
+        "lastMessage": { "type": "string" },
+        "lastTimestamp": { "type": "integer" },
+        "lastSenderId": { "type": "string" }
+      },
+      "required": ["id", "participants"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "A real-time message exchanged in a conversation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderPhone": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "text": { "type": "string" },
+        "mediaType": { "type": "string" },
+        "mediaData": { "type": "string" },
+        "timestamp": { "type": "integer" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "conversationId", "senderId", "text", "timestamp"]
+    },
+    "CallSignal": {
+      "title": "CallSignal",
+      "description": "Real-time audio or video call signaling between users.",
+      "type": "object",
+      "properties": {
+        "callId": { "type": "string" },
+        "callerId": { "type": "string" },
+        "callerName": { "type": "string" },
+        "callerPhone": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "receiverName": { "type": "string" },
+        "receiverPhone": { "type": "string" },
+        "isVideo": { "type": "boolean" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "integer" }
+      },
+      "required": ["callId", "callerId", "receiverId", "status", "timestamp"]
+    },
+    "Reel": {
+      "title": "Reel",
+      "description": "Public short video / update posted by a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhone": { "type": "string" },
+        "authorAvatar": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "caption": { "type": "string" },
+        "likesCount": { "type": "integer" },
+        "likedBy": { "type": "array", "items": { "type": "string" } },
+        "commentsCount": { "type": "integer" },
+        "timestamp": { "type": "integer" }
+      },
+      "required": ["id", "authorId", "caption", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "1-on-1 private conversations"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Individual messages in a conversation"
+    },
+    "/calls/{callId}": {
+      "schema": "CallSignal",
+      "description": "Real-time call signals"
+    },
+    "/reels/{reelId}": {
+      "schema": "Reel",
+      "description": "Public shared reels and updates"
+    }
+  }
+}

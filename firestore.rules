@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Registered users profile & status
+    match /users/{userId} {
+      allow read, write: if true;
+
+      match /outgoing_messages/{messageId} {
+        allow read, write: if true;
+      }
+
+      match /incoming_messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+
+    // 1-on-1 End-to-End Chat Conversations
+    match /conversations/{conversationId} {
+      allow read, write: if true;
+
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Real-Time Audio & Video Call Signaling
+    match /calls/{callId} {
+      allow read, write: if true;
+    }
+
+    // Call history logs
+    match /call_logs/{logId} {
+      allow read, write: if true;
+    }
+
+    // Public Reels shared by community users
+    match /reels/{reelId} {
+      allow read, write: if true;
+
+      match /comments/{commentId} {
+        allow read, write: if true;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

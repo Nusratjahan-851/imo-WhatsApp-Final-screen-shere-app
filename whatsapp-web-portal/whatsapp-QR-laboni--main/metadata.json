@@ -1,0 +1,10 @@
+{
+  "name": "Remix Remix WhatsApp QR Code Share - Accessible for Visually Impaired",
+  "description": "Accessible WhatsApp Short Link QR Code sharing platform for visually impaired individuals and their contacts, featuring voice narration, instant WhatsApp chat, high contrast, and direct sharing.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
