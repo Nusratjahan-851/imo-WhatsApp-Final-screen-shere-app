@@ -99,7 +99,7 @@ class ScreenShareService : Service() {
                 "Screen Sharing Assistant",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "দৃষ্টি প্রতিবন্ধী ভাই ও বোনদের জন্য লাইভ স্ক্রিন শেয়ারিং বিজ্ঞপ্তি"
+                description = "লাইভ স্ক্রিন শেয়ারিং বিজ্ঞপ্তি"
                 setShowBadge(false)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }

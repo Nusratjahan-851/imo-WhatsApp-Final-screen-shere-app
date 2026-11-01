@@ -146,7 +146,7 @@ Unified Website: $readymadeWebsiteUrl
      */
     fun getWebsiteEmbedCode(): String {
         return """
-<!-- দৃষ্টি প্রতিবন্ধী ভাই ও বোনদের চ্যানেল #$slotNumber ($nameBn) ইউনিফাইড লাইভ স্ক্রিন ফ্রেম -->
+<!-- চ্যানেল #$slotNumber ($nameBn) ইউনিফাইড লাইভ স্ক্রিন ফ্রেম -->
 <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
   <div style="margin-bottom: 8px; font-weight: bold; color: #155E44; font-size: 14px;">
     🟢 চ্যানেল #$slotNumber: $nameBn (পাসওয়ার্ড: $uniquePassword)

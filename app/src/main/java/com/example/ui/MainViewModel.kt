@@ -325,7 +325,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun speakScreenShareGuide() {
         speakAnnouncement(
-            "দৃষ্টি প্রতিবন্ধী ভাই ও বোনদের জন্য স্ক্রিন শেয়ার নির্দেশিকা: " +
+            "স্ক্রিন শেয়ার ও রিমোট অ্যাসিস্ট্যান্স নির্দেশিকা: " +
                 "ধাপ ১: WhatsApp অথবা imo বাটন নির্বাচন করুন। " +
                 "ধাপ ২: স্ক্রিন শেয়ার চালু করুন বাটনে চাপ দিয়ে Start now বাটনে ট্যাপ করুন। " +
                 "ধাপ ৩: একক ওয়েবসাইট লিংকে সরাসরি লাইভ কিউআর কোড দেখা যাবে।"

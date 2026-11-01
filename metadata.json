@@ -1,6 +1,6 @@
 {
   "name": "Link Assistant",
-  "description": "Accessible WhatsApp device linking code assistant designed for visually impaired users with voice guidance, large touch targets, 8-character pairing code boxes, and instant copy.",
+  "description": "Accessible WhatsApp device linking code assistant with voice guidance, large touch targets, 8-character pairing code boxes, instant copy, and real-time screen sharing.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

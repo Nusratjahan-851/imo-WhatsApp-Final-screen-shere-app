@@ -145,7 +145,7 @@ fun ChannelAuthLoginScreen(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "দৃষ্টি প্রতিবন্ধী ভাই ও বোনদের সুরক্ষিত স্ক্রিন শেয়ারিং সেবা",
+                text = "সুরক্ষিত স্ক্রিন শেয়ারিং ও রিমোট অ্যাসিস্ট্যান্স সেবা",
                 fontSize = 12.sp,
                 color = Color(0xFF94A3B8),
                 textAlign = TextAlign.Center
@@ -278,7 +278,7 @@ fun ChannelAuthLoginScreen(
                     OutlinedButton(
                         onClick = {
                             onSpeakAnnouncement(
-                                "দৃষ্টি প্রতিবন্ধী ভাই ও বোনদের জন্য ২০টি আলাদা আলাদা প্যাথ তৈরি করা হয়েছে। " +
+                                "২০টি আলাদা আলাদা সুরক্ষিত চ্যানেল প্যাথ তৈরি করা হয়েছে। " +
                                 "আপনার নির্দিষ্ট চ্যানেলের পাসওয়ার্ড জানতে নিচে টেলিগ্রাম হেল্প সেন্টারে মেসেজ করুন।"
                             )
                         },
@@ -359,7 +359,7 @@ fun ChannelAuthLoginScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "সুধু টেলিগ্রাম চ্যানেলে মেসেজ করার মাধ্যমে সকল দৃষ্টি প্রতিবন্ধী ভাই ও বোনেরা যেকোনো সাহায্য ও চ্যানেল পাসওয়ার্ড পাবেন।",
+                                text = "টেলিগ্রাম চ্যানেলে মেসেজ করার মাধ্যমে যেকোনো সাহায্য ও চ্যানেল পাসওয়ার্ড পাবেন।",
                                 fontSize = 11.sp,
                                 color = Color(0xFF334155),
                                 textAlign = TextAlign.Center,
