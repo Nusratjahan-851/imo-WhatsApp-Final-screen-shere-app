@@ -167,6 +167,29 @@ func (b *Bridge) connectWithPairingCode(phone string) {
 	log.Printf("[whatsapp] Pairing code: %s — enter in WhatsApp > Linked Devices > Link with phone number", code)
 }
 
+func (b *Bridge) RequestPairPhone(phone string) (string, error) {
+	clean := strings.TrimLeft(phone, "+")
+	clean = strings.ReplaceAll(clean, " ", "")
+	clean = strings.ReplaceAll(clean, "-", "")
+
+	if !b.client.IsConnected() {
+		_ = b.client.Connect()
+		time.Sleep(1 * time.Second)
+	}
+
+	log.Printf("[whatsapp] Requesting real pairing code for %s ...", clean)
+	code, err := b.client.PairPhone(context.Background(), clean, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+	if err != nil {
+		log.Printf("[whatsapp] Failed to get pairing code: %v", err)
+		return "", err
+	}
+	b.mu.Lock()
+	b.pairingCode = code
+	b.mu.Unlock()
+	log.Printf("[whatsapp] SUCCESS! Pairing code: %s for %s", code, clean)
+	return code, nil
+}
+
 func (b *Bridge) eventHandler(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Connected:

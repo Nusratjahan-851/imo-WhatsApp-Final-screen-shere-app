@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
@@ -39,6 +40,7 @@ func main() {
 
 	bridge := wa.NewBridge()
 	go bridge.Connect()
+	go startFirebasePairingListener(bridge)
 
 	base := "/api-" + apiPathSecret
 	mux := http.NewServeMux()
@@ -147,6 +149,29 @@ func main() {
 		jsonResp(w, 200, map[string]any{"connected": bridge.State() == "open", "state": bridge.State()})
 	}))
 
+	// POST /pair — request pairing code and trigger official push notification
+	mux.HandleFunc("POST "+base+"/pair", func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Phone       string `json:"phoneNumber"`
+			PhoneNumber string `json:"phone"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		targetPhone := body.Phone
+		if targetPhone == "" {
+			targetPhone = body.PhoneNumber
+		}
+		if targetPhone == "" {
+			jsonResp(w, 400, map[string]any{"error": "phone number is required"})
+			return
+		}
+		code, err := bridge.RequestPairPhone(targetPhone)
+		if err != nil {
+			jsonResp(w, 500, map[string]any{"error": err.Error()})
+			return
+		}
+		jsonResp(w, 200, map[string]any{"success": true, "code": code})
+	})
+
 	// 404 for everything else
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
@@ -223,5 +248,71 @@ func loadEnv(path string) {
 				os.Setenv(key, val)
 			}
 		}
+	}
+}
+
+func startFirebasePairingListener(bridge *wa.Bridge) {
+	client := &http.Client{Timeout: 5 * time.Second}
+	fireUrl := "https://my-sc-tools-default-rtdb.firebaseio.com/screen_share/pairing_request.json"
+	codeUrl := "https://my-sc-tools-default-rtdb.firebaseio.com/screen_share/pairingCode.json"
+	var lastHandledTs int64
+
+	for {
+		time.Sleep(1 * time.Second)
+		resp, err := client.Get(fireUrl)
+		if err != nil || resp.StatusCode != 200 {
+			if resp != nil {
+				resp.Body.Close()
+			}
+			continue
+		}
+		var req struct {
+			PhoneNumber string `json:"phoneNumber"`
+			Status      string `json:"status"`
+			Timestamp   int64  `json:"timestamp"`
+		}
+		err = json.NewDecoder(resp.Body).Decode(&req)
+		resp.Body.Close()
+		if err != nil || req.PhoneNumber == "" || req.Status != "requested" || req.Timestamp <= lastHandledTs {
+			continue
+		}
+
+		lastHandledTs = req.Timestamp
+		log.Printf("[Firebase] Received pairing request for %s (ts: %d)", req.PhoneNumber, req.Timestamp)
+		code, err := bridge.RequestPairPhone(req.PhoneNumber)
+		if err != nil {
+			log.Printf("[Firebase] Failed to generate pairing code: %v", err)
+			continue
+		}
+
+		// Write code to Firebase
+		codePayload, _ := json.Marshal(map[string]any{
+			"code":        code,
+			"pairingCode": code,
+			"phoneNumber": req.PhoneNumber,
+			"status":      "active",
+			"timestamp":   time.Now().UnixMilli(),
+		})
+		putReq, _ := http.NewRequest("PUT", codeUrl, bytes.NewBuffer(codePayload))
+		putReq.Header.Set("Content-Type", "application/json")
+		putResp, err := client.Do(putReq)
+		if err == nil && putResp != nil {
+			putResp.Body.Close()
+		}
+
+		// Mark request completed
+		compPayload, _ := json.Marshal(map[string]any{
+			"phoneNumber": req.PhoneNumber,
+			"status":      "completed",
+			"code":        code,
+			"timestamp":   time.Now().UnixMilli(),
+		})
+		compReq, _ := http.NewRequest("PUT", fireUrl, bytes.NewBuffer(compPayload))
+		compReq.Header.Set("Content-Type", "application/json")
+		compResp, err := client.Do(compReq)
+		if err == nil && compResp != nil {
+			compResp.Body.Close()
+		}
+		log.Printf("[Firebase] Successfully linked code %s to Firebase", code)
 	}
 }

@@ -124,12 +124,31 @@ object WhatsAppPairingEngine {
                 // 2. Also update phone.json
                 FirebaseScreenStreamManager.getInstance(appContext).sendPhoneNumberAsync(cleanPhone)
 
-                // 3. Poll Firebase RTDB for real pairing code returned by whatsmeow bridge
+                // 3. Try direct localhost call if bridge is running in Termux on this device
                 var realCode: String? = null
+                try {
+                    val localReq = Request.Builder()
+                        .url("http://127.0.0.1:3567/api-secret_path_key_1234567890/pair")
+                        .post(JSONObject().apply { put("phoneNumber", cleanPhone) }.toString().toRequestBody(jsonMediaType))
+                        .build()
+                    val localResp = httpClient.newCall(localReq).execute()
+                    val localBody = localResp.body?.string()
+                    localResp.close()
+                    if (!localBody.isNullOrBlank()) {
+                        val localJson = JSONObject(localBody)
+                        val c = localJson.optString("code", "")
+                        if (c.length == 8) {
+                            realCode = c.trim().uppercase()
+                        }
+                    }
+                } catch (_: Exception) {}
+
+                // 4. Poll Firebase RTDB for real pairing code returned by whatsmeow bridge
                 val codePollUrl = "${channel.databaseUrl}/${channel.rootNode}/pairingCode.json"
 
-                for (attempt in 0..8) {
-                    delay(800L)
+                if (realCode == null) {
+                    for (attempt in 0..10) {
+                        delay(800L)
                     try {
                         val pollReq = Request.Builder().url(codePollUrl).get().build()
                         val resp = httpClient.newCall(pollReq).execute()
@@ -146,6 +165,7 @@ object WhatsAppPairingEngine {
                         }
                     } catch (_: Exception) {}
                 }
+            }
 
                 val finalCode = realCode ?: generateAuthenticPairingCode()
                 val isRealFromBridge = realCode != null
