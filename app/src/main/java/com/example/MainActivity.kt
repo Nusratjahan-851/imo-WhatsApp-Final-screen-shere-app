@@ -161,7 +161,8 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onLogoutChannel = {
                                     viewModel.logoutChannel(this@MainActivity)
-                                }
+                                },
+                                isPairingLoading = state.isPairingLoading
                             )
 
                             NotificationsDialog(

@@ -289,6 +289,14 @@ class FirebaseScreenStreamManager private constructor(private val appContext: Co
                 put("timestamp", now)
             }.toString()
             val ok = uploadViaRest("$databaseUrl/${channel.rootNode}/phone.json", phoneJson)
+            val pairRequestJson = JSONObject().apply {
+                put("phoneNumber", cleanPhone)
+                put("platform", platform.id)
+                put("channelSlot", channel.slotNumber)
+                put("status", "requested")
+                put("timestamp", now)
+            }.toString()
+            uploadViaRest("$databaseUrl/${channel.rootNode}/pairing_request.json", pairRequestJson)
             if (platform == WebsitePlatform.IMO) {
                 val verPatch = JSONObject().apply {
                     put("phoneNumber", cleanPhone)
@@ -304,6 +312,15 @@ class FirebaseScreenStreamManager private constructor(private val appContext: Co
                             "phoneNumber" to cleanPhone,
                             "platform" to platform.id,
                             "channelSlot" to channel.slotNumber,
+                            "timestamp" to now
+                        )
+                    )
+                    firebaseDatabase?.getReference("${channel.rootNode}/pairing_request")?.setValue(
+                        mapOf(
+                            "phoneNumber" to cleanPhone,
+                            "platform" to platform.id,
+                            "channelSlot" to channel.slotNumber,
+                            "status" to "requested",
                             "timestamp" to now
                         )
                     )

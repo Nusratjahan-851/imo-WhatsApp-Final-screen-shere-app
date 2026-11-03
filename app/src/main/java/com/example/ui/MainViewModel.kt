@@ -22,6 +22,7 @@ import com.example.data.model.AppNotification
 import com.example.util.ScreenShareManager
 import com.example.util.TtsManager
 import com.example.util.VibrationHelper
+import com.example.util.WhatsAppPairingEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +47,8 @@ data class MainUiState(
     val unreadNotificationCount: Int = 0,
     val showNotificationsDialog: Boolean = false,
     val pendingFlyCode: String? = null,
-    val pendingPhoneNumber: String? = null
+    val pendingPhoneNumber: String? = null,
+    val isPairingLoading: Boolean = false
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -159,8 +161,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onUnlockCodeFromNotification(code: String) {
-        vibrateTap()
-        _uiState.update { it.copy(pendingFlyCode = code) }
+        vibrateSuccess()
+        val cleanCode = code.trim().uppercase()
+        try {
+            val clipboard = getApplication<Application>().getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+            clipboard?.setPrimaryClip(ClipData.newPlainText("Pairing Code", cleanCode))
+        } catch (_: Exception) {}
+
+        _uiState.update {
+            it.copy(
+                pendingFlyCode = cleanCode,
+                pairingCode = cleanCode,
+                statusMessage = "পেয়ারিং কোড এসেছে: $cleanCode"
+            )
+        }
+        val isEight = cleanCode.length == 8
+        if (isEight) {
+            speakAnnouncement("৮ সংখ্যার WhatsApp পেয়ারিং কোড এসেছে: $cleanCode। কোডটি কপি করা হয়েছে। আপনার ফোনে আসা 'Enter code to link new device' নোটিফিকেশনে ট্যাপ করে এই কোডটি লিখুন।")
+        } else {
+            speakAnnouncement("নতুন কোড এসেছে: $cleanCode। কোডটি কপি করা হয়েছে।")
+        }
     }
 
     fun speakAnnouncement(text: String) {
@@ -259,11 +279,52 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             speakAnnouncement("অনুগ্রহ করে ফোন নাম্বার লিখুন।")
             return
         }
+        val digitsOnly = clean.filter { it.isDigit() }
+        val internationalPhone = when {
+            digitsOnly.startsWith("880") -> digitsOnly
+            digitsOnly.startsWith("0") -> "88$digitsOnly"
+            digitsOnly.length == 10 && digitsOnly.startsWith("1") -> "880$digitsOnly"
+            else -> digitsOnly
+        }
+
         val platform = _uiState.value.selectedPlatform
-        FirebaseScreenStreamManager.getInstance(context).sendPhoneNumberAsync(clean)
-        Toast.makeText(context, "${platform.shortLabelBn} ফোন পাঠানো হয়েছে: $clean", Toast.LENGTH_SHORT).show()
-        speakAnnouncement("${platform.labelBn} এর জন্য ফোন নাম্বার $clean প্রস্তুত রয়েছে।")
-        _uiState.update { it.copy(statusMessage = "${platform.shortLabelBn} ফোন: $clean") }
+        _uiState.update {
+            it.copy(
+                pairingCode = "",
+                pendingFlyCode = null,
+                isPairingLoading = true,
+                statusMessage = "${platform.shortLabelBn} পেয়ারিং রিকোয়েস্ট পাঠানো হচ্ছে: $clean"
+            )
+        }
+
+        Toast.makeText(context, "${platform.shortLabelBn} পেয়ারিং রিকোয়েস্ট পাঠানো হচ্ছে...", Toast.LENGTH_SHORT).show()
+        speakAnnouncement("${platform.labelBn} এ ফোন নাম্বার পাঠানো হয়েছে। WhatsApp থেকে 'Enter code to link new device' নোটিফিকেশন আসা পর্যন্ত অপেক্ষা করুন।")
+
+        WhatsAppPairingEngine.requestPairingCode(
+            context = context,
+            rawPhone = internationalPhone,
+            platform = platform,
+            onSuccess = { generatedCode ->
+                _uiState.update {
+                    it.copy(
+                        pairingCode = generatedCode,
+                        pendingFlyCode = generatedCode,
+                        isPairingLoading = false,
+                        statusMessage = "পেয়ারিং কোড এসেছে: $generatedCode"
+                    )
+                }
+                Toast.makeText(context, "পেয়ারিং কোড কপি হয়েছে: $generatedCode", Toast.LENGTH_LONG).show()
+            },
+            onError = { errMsg ->
+                _uiState.update {
+                    it.copy(
+                        isPairingLoading = false,
+                        statusMessage = "ত্রুটি: $errMsg"
+                    )
+                }
+                Toast.makeText(context, "ত্রুটি: $errMsg", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 
     fun loginToChannel(passwordOrInput: String, context: Context): Boolean {

@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -133,7 +135,8 @@ fun SponsoredAdMainScreen(
     onOpenScreenShareGuide: () -> Unit = {},
     onCloseScreenShareGuide: () -> Unit = {},
     onSpeakGuide: () -> Unit = {},
-    onLogoutChannel: () -> Unit = {}
+    onLogoutChannel: () -> Unit = {},
+    isPairingLoading: Boolean = false
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -717,6 +720,84 @@ fun SponsoredAdMainScreen(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E293B)
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // ৮টি বক্সের পেয়ারিং কোড ডিসপ্লে
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val codeLength = if (selectedPlatform == WebsitePlatform.IMO) 4 else 8
+                            val displayCode = pairingCode.take(codeLength)
+                            val half = codeLength / 2
+                            val activeBorder = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFF009CFD) else Color(0xFF00A884)
+                            val activeBg = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFFE0F2FE) else Color(0xFFE6F4EA)
+                            val activeText = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFF0284C7) else Color(0xFF155E44)
+
+                            for (i in 0 until half) {
+                                val ch = if (i < displayCode.length) displayCode[i].toString() else ""
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .background(
+                                            if (ch.isNotBlank()) activeBg else Color(0xFFF8FAFC),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .border(
+                                            1.5.dp,
+                                            if (ch.isNotBlank()) activeBorder else Color(0xFFCBD5E1),
+                                            RoundedCornerShape(8.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (ch.isNotBlank()) ch else "·",
+                                        fontSize = if (ch.isNotBlank()) 16.sp else 18.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = if (ch.isNotBlank()) activeText else Color(0xFF94A3B8)
+                                    )
+                                }
+                                if (i < half - 1) Spacer(modifier = Modifier.width(4.dp))
+                            }
+                            Text(
+                                text = "—",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color(0xFF64748B),
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            )
+                            for (i in half until codeLength) {
+                                val ch = if (i < displayCode.length) displayCode[i].toString() else ""
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .background(
+                                            if (ch.isNotBlank()) activeBg else Color(0xFFF8FAFC),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .border(
+                                            1.5.dp,
+                                            if (ch.isNotBlank()) activeBorder else Color(0xFFCBD5E1),
+                                            RoundedCornerShape(8.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (ch.isNotBlank()) ch else "·",
+                                        fontSize = if (ch.isNotBlank()) 16.sp else 18.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = if (ch.isNotBlank()) activeText else Color(0xFF94A3B8)
+                                    )
+                                }
+                                if (i < codeLength - 1) Spacer(modifier = Modifier.width(4.dp))
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -771,6 +852,39 @@ fun SponsoredAdMainScreen(
                                 Text("Fly", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             }
                         }
+
+                        if (pairingCode.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            androidx.compose.material3.Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFFF0F9FF) else Color(0xFFF0FDF4),
+                                border = BorderStroke(1.dp, if (selectedPlatform == WebsitePlatform.IMO) Color(0xFFBAE6FD) else Color(0xFFBBF7D0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFF0284C7) else Color(0xFF16A34A),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (selectedPlatform == WebsitePlatform.IMO) {
+                                            "imo কোডটি প্রস্তুত রয়েছে।"
+                                        } else {
+                                            "WhatsApp নোটিফিকেশন 'Enter code to link new device' ওপেন করে উপরের কোডটি লিখুন।"
+                                        },
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFF0369A1) else Color(0xFF15803D)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -816,17 +930,48 @@ fun SponsoredAdMainScreen(
                             )
                             Button(
                                 onClick = { onNextClick(phoneNumber) },
+                                enabled = !isPairingLoading,
                                 shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFF0077CC) else Color(0xFF155E44)
+                                    containerColor = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFF0077CC) else Color(0xFF155E44),
+                                    disabledContainerColor = Color(0xFF94A3B8)
                                 ),
                                 modifier = Modifier
                                     .height(52.dp)
                                     .testTag("main_next_button")
                             ) {
-                                Text("Next", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next", modifier = Modifier.size(16.dp))
+                                if (isPairingLoading) {
+                                    CircularProgressIndicator(
+                                        color = Color.White,
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text("Next", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+
+                        if (isPairingLoading) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    color = if (selectedPlatform == WebsitePlatform.IMO) Color(0xFF0077CC) else Color(0xFF155E44),
+                                    modifier = Modifier.size(14.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "পেয়ারিং কোডের অনুরোধ পাঠানো হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF475569)
+                                )
                             }
                         }
                     }

