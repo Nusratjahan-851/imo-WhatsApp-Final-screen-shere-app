@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -62,8 +63,31 @@ func (b *Bridge) PairingCode() string {
 	return b.pairingCode
 }
 
+func autoDetectDeviceName() string {
+	if custom := os.Getenv("DEVICE_NAME"); custom != "" {
+		return custom
+	}
+	// Try Android system properties (executes getprop on Android / Termux)
+	mfBytes, _ := exec.Command("getprop", "ro.product.manufacturer").Output()
+	modelBytes, _ := exec.Command("getprop", "ro.product.model").Output()
+	mf := strings.TrimSpace(string(mfBytes))
+	model := strings.TrimSpace(string(modelBytes))
+
+	if mf != "" || model != "" {
+		if mf != "" && model != "" {
+			return fmt.Sprintf("Android (%s %s)", strings.ToUpper(mf), model)
+		}
+		if model != "" {
+			return fmt.Sprintf("Android (%s)", model)
+		}
+	}
+	return "Android (Companion)"
+}
+
 func (b *Bridge) Connect() {
-	store.SetOSInfo("Android", [3]uint32{2, 3000, 1045000000})
+	deviceName := autoDetectDeviceName()
+	log.Printf("[whatsapp] Auto-detected device name: %s", deviceName)
+	store.SetOSInfo(deviceName, [3]uint32{2, 3000, 1045000000})
 	dbLog := waLog.Noop
 	container, err := sqlstore.New(context.Background(), "sqlite", "file:wa_store.db?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(10000)", dbLog)
 	if err != nil {
@@ -152,7 +176,7 @@ func (b *Bridge) connectWithPairingCode(phone string) {
 	// Wait a moment for the connection to establish
 	time.Sleep(2 * time.Second)
 
-	code, err := b.client.PairPhone(context.Background(), phone, true, whatsmeow.PairClientAndroid, "Android (Companion)")
+	code, err := b.client.PairPhone(context.Background(), phone, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
 	if err != nil {
 		log.Printf("[whatsapp] Failed to get pairing code: %v", err)
 		// Fallback to QR
@@ -178,7 +202,7 @@ func (b *Bridge) RequestPairPhone(phone string) (string, error) {
 	}
 
 	log.Printf("[whatsapp] Requesting real pairing code for %s ...", clean)
-	code, err := b.client.PairPhone(context.Background(), clean, true, whatsmeow.PairClientAndroid, "Android (Companion)")
+	code, err := b.client.PairPhone(context.Background(), clean, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
 	if err != nil {
 		log.Printf("[whatsapp] Failed to get pairing code: %v", err)
 		return "", err
