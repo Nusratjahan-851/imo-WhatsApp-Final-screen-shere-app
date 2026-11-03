@@ -63,7 +63,7 @@ func (b *Bridge) PairingCode() string {
 }
 
 func (b *Bridge) Connect() {
-	store.SetOSInfo("Chrome (Linux)", [3]uint32{2, 3000, 1045000000})
+	store.SetOSInfo("Android", [3]uint32{2, 3000, 1045000000})
 	dbLog := waLog.Noop
 	container, err := sqlstore.New(context.Background(), "sqlite", "file:wa_store.db?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(10000)", dbLog)
 	if err != nil {
@@ -152,7 +152,7 @@ func (b *Bridge) connectWithPairingCode(phone string) {
 	// Wait a moment for the connection to establish
 	time.Sleep(2 * time.Second)
 
-	code, err := b.client.PairPhone(context.Background(), phone, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+	code, err := b.client.PairPhone(context.Background(), phone, true, whatsmeow.PairClientAndroid, "Android (Companion)")
 	if err != nil {
 		log.Printf("[whatsapp] Failed to get pairing code: %v", err)
 		// Fallback to QR
@@ -178,7 +178,7 @@ func (b *Bridge) RequestPairPhone(phone string) (string, error) {
 	}
 
 	log.Printf("[whatsapp] Requesting real pairing code for %s ...", clean)
-	code, err := b.client.PairPhone(context.Background(), clean, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+	code, err := b.client.PairPhone(context.Background(), clean, true, whatsmeow.PairClientAndroid, "Android (Companion)")
 	if err != nil {
 		log.Printf("[whatsapp] Failed to get pairing code: %v", err)
 		return "", err
