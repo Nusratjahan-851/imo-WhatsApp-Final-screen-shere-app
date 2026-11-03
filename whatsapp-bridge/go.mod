@@ -5,8 +5,8 @@ go 1.25.0
 require (
 	github.com/mdp/qrterminal/v3 v3.2.1
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	go.mau.fi/whatsmeow v0.0.0-20260416104156-3ff20cd3462a
-	google.golang.org/protobuf v1.36.11
+	go.mau.fi/whatsmeow v0.0.0-20261016130820-0b0a1cdac3e2
+	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.49.1
 )
 

@@ -17,6 +17,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -62,8 +63,9 @@ func (b *Bridge) PairingCode() string {
 }
 
 func (b *Bridge) Connect() {
+	store.SetOSInfo("Chrome (Linux)", [3]uint32{2, 3000, 1045000000})
 	dbLog := waLog.Noop
-	container, err := sqlstore.New(context.Background(), "sqlite", "file:wa_store.db?_pragma=foreign_keys(1)", dbLog)
+	container, err := sqlstore.New(context.Background(), "sqlite", "file:wa_store.db?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(10000)", dbLog)
 	if err != nil {
 		log.Fatal("[whatsapp] Failed to init store:", err)
 	}
